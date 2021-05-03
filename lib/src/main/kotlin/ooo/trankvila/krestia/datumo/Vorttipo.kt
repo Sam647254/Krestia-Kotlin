@@ -62,4 +62,6 @@ enum class Vorttipo {
    Cifero
 }
 
-data class InflekciaŜtupo(val bazo: Vorttipo, val inflekcio: Inflekcio)
+data class InflekciaŜtupo(val bazo: Vorttipo, val bazaInflekcio: Inflekcio, val inflekcio: Inflekcio)
+data class MalinflekaŜtupo(val finaĵo: String, val inflekcio: Inflekcio)
+data class MalinflektitaVorto(val bazaVorto: String, val vorttipo: Vorttipo, val ŝtupoj: List<MalinflekaŜtupo>)

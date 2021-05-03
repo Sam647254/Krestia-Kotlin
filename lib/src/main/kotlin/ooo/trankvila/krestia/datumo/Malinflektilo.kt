@@ -5,14 +5,28 @@ class Malinflektilo {
 
    fun troviFinaĵon(vorto: String): Pair<String, InflekciaŜtupo>? =
       troviPlejLonganFinaĵon(radiko, vorto, 0, 0, null)?.let { (longeco, ŝtupo) ->
-         Pair(vorto.substring(vorto.length - longeco, vorto.length), ŝtupo)
+         val restantaVorto = vorto.substring(vorto.length - longeco, vorto.length)
+         when (ŝtupo) {
+            is MalinflektiloŜtupo.SimplaŜtupo -> Pair(
+               restantaVorto,
+               ŝtupo.ŝtupo
+            )
+            is MalinflektiloŜtupo.KalkulaŜtupo -> Pair(
+               restantaVorto,
+               ŝtupo.ŝtupo(restantaVorto)
+            )
+         }
       }
 
    fun aldoniFinaĵon(finaĵo: String, ŝtupo: InflekciaŜtupo) {
-      radiko = aldoni(finaĵo, ŝtupo, radiko, 0)
+      radiko = aldoni(finaĵo, MalinflektiloŜtupo.SimplaŜtupo(ŝtupo), radiko, 0)
    }
 
-   private fun aldoni(finaĵo: String, ŝtupo: InflekciaŜtupo, node: Node?, longeco: Int): Node {
+   fun aldoniFinaĵon(finaĵo: String, ŝtupo: (String) -> InflekciaŜtupo) {
+      radiko = aldoni(finaĵo, MalinflektiloŜtupo.KalkulaŜtupo(ŝtupo), radiko, 0)
+   }
+
+   private fun aldoni(finaĵo: String, ŝtupo: MalinflektiloŜtupo, node: Node?, longeco: Int): Node {
       if (longeco == finaĵo.length) {
          return Node(ŝtupo)
       }
@@ -28,8 +42,8 @@ class Malinflektilo {
       vorto: String,
       longeco: Int,
       lastaLongeco: Int,
-      lastaValida: InflekciaŜtupo?
-   ): Pair<Int, InflekciaŜtupo>? {
+      lastaValida: MalinflektiloŜtupo?
+   ): Pair<Int, MalinflektiloŜtupo>? {
       if (node == null) {
          if (lastaValida == null) return null
          return lastaLongeco to lastaValida
@@ -47,11 +61,16 @@ class Malinflektilo {
       )
    }
 
-   private inner class Node(val ŝtupo: InflekciaŜtupo?) {
+   private inner class Node(val ŝtupo: MalinflektiloŜtupo?) {
       val sekvaj = Array<Node?>(R) { null }
    }
 
    companion object {
       private const val R = 26
    }
+}
+
+private sealed class MalinflektiloŜtupo {
+   data class SimplaŜtupo(val ŝtupo: InflekciaŜtupo) : MalinflektiloŜtupo()
+   data class KalkulaŜtupo(val ŝtupo: (String) -> InflekciaŜtupo) : MalinflektiloŜtupo()
 }
