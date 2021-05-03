@@ -11,45 +11,13 @@ object Malinflektado {
          "rem" to Inflekcio.Havado,
          "res" to Inflekcio.Havado,
          "rim" to Inflekcio.Ekzistado,
-         "vra" to Inflekcio.SpecifaĜerundo,
-      ).forEach { (finaĵo, inflekcio) ->
-         aldoniFinaĵon(finaĵo, InflekciaŜtupo(Vorttipo.NombrigeblaKlaso, Inflekcio.Difinito, inflekcio))
-         aldoniFinaĵon(finaĵo, InflekciaŜtupo(Vorttipo.NenombrigeblaKlaso, Inflekcio.Difinito, inflekcio))
-         listOf(
-            Vorttipo.AntaŭNenombrigeblaEco,
-            Vorttipo.AntaŭNombrigeblaEco,
-            Vorttipo.MalantaŭNenombrigeblaEco,
-            Vorttipo.MalantaŭNombrigeblaEco
-         ).forEach { vorttipo ->
-            aldoniFinaĵon(finaĵo, InflekciaŜtupo(vorttipo, Inflekcio.Difinito, inflekcio))
-         }
-      }
-
-      listOf(
          "lam" to Inflekcio.Translativo,
          "las" to Inflekcio.Translativo,
-         "vra" to Inflekcio.Ĝerundo,
-         "re" to Inflekcio.Kvalito
+         "vra" to Inflekcio.SpecifaĜerundo,
+         "re" to Inflekcio.Kvalito,
+         "la" to Inflekcio.Apartigita
       ).forEach { (finaĵo, inflekcio) ->
-         aldoniFinaĵon(finaĵo, InflekciaŜtupo(Vorttipo.NombrigeblaKlaso, Inflekcio.PredikativoEsti, inflekcio))
-         aldoniFinaĵon(finaĵo, InflekciaŜtupo(Vorttipo.NenombrigeblaKlaso, Inflekcio.PredikativoEsti, inflekcio))
-         listOf(
-            Vorttipo.AntaŭNenombrigeblaEco,
-            Vorttipo.AntaŭNombrigeblaEco,
-            Vorttipo.MalantaŭNenombrigeblaEco,
-            Vorttipo.MalantaŭNombrigeblaEco
-         ).forEach { vorttipo ->
-            aldoniFinaĵon(finaĵo, InflekciaŜtupo(vorttipo, Inflekcio.PredikativoEsti, inflekcio))
-         }
-      }
-
-      listOf(
-         Vorttipo.AntaŭNenombrigeblaEco,
-         Vorttipo.AntaŭNombrigeblaEco,
-         Vorttipo.MalantaŭNenombrigeblaEco,
-         Vorttipo.MalantaŭNombrigeblaEco
-      ).forEach { vorttipo ->
-         aldoniFinaĵon("la", InflekciaŜtupo(vorttipo, Inflekcio.Difinito, Inflekcio.Apartigita))
+         aldoniFinaĵon(finaĵo, inflekcio)
       }
    }
 
@@ -57,13 +25,29 @@ object Malinflektado {
       val ŝtupoj = mutableListOf<MalinflekaŜtupo>()
       var restantaVorto = vorto
       while (true) {
-         val sekvaŜtupo = troviFinaĵon(restantaVorto)
+         val sekvaŜtupo = troviFinaĵon(restantaVorto) ?: run {
+            malantaŭAlAntaŭ.keys.forEach {
+               if (restantaVorto.endsWith(it)) {
+                  ŝtupoj.add(MalinflekaŜtupo("", Inflekcio.PredikativoEsti))
+                  return@run troviFinaĵon(
+                     restantaVorto.substring(
+                        0,
+                        restantaVorto.length - it.length
+                     ) + malantaŭAlAntaŭ[it]
+                  )
+               }
+            }
+            null
+         }
          if (sekvaŜtupo == null) {
             val (bazaVorto, vorttipo) = troviTiponDeBazaVorto(restantaVorto) ?: throw Exception("Invalid word: $vorto")
-            return MalinflektitaVorto(bazaVorto, vorttipo, ŝtupoj)
+            if (restantaVorto != bazaVorto) { // restanta estas predikativoEsti
+               ŝtupoj.add(MalinflekaŜtupo("", Inflekcio.PredikativoEsti))
+            }
+            return MalinflektitaVorto(bazaVorto, vorttipo, ŝtupoj.reversed())
          } else {
             val (finaĵo, ŝtupo) = sekvaŜtupo
-            ŝtupoj.add(MalinflekaŜtupo(finaĵo, ŝtupo.inflekcio))
+            ŝtupoj.add(MalinflekaŜtupo(finaĵo, ŝtupo))
             restantaVorto = restantaVorto.substring(0, restantaVorto.length - finaĵo.length)
          }
       }
@@ -113,4 +97,9 @@ object Malinflektado {
       }
       finaĵoj.toMap()
    }
+   private val malantaŭAlAntaŭ = mapOf(
+      "aa" to "a",
+      "o" to "e",
+      "u" to "i"
+   )
 }
